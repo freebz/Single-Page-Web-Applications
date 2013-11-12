@@ -251,7 +251,7 @@ spa.shell = (function () {
     // Begin Event handler /onClickChat/
     onClickChat = function ( event ) {
 	changeAnchorPart({
-	  chat : ( stateMap.is_chat_retrated ? 'open' : 'closed' )
+	  chat : ( stateMap.is_chat_retracted ? 'open' : 'closed' )
 	});
 	return false;
     };

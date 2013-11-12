@@ -85,46 +85,46 @@ spa.shell = (function () {
     //   * false - slider is extended
     //
     toggleChat = function ( do_extend, callback ) {
-      var
+	var
 	px_chat_ht = jqueryMap.$chat.height(),
 	is_open    = px_chat_ht === configMap.chat_extend_height,
 	is_closed  = px_chat_ht === configMap.chat_retract_height,
 	is_sliding = ! is_open && ! is_closed;
 
-      // avoid race condition
-      if ( is_sliding ) { return false; }
+	// avoid race condition
+	if ( is_sliding ) { return false; }
 
-      // Begin extend chat slider
-      if ( do_extend ) {
-	jqueryMap.$chat.animate(
-	  { height : configMap.chat_extend_height },
-	  configMap.chat_extend_time,
-	  function () {
-	    jqueryMap.$chat.attr(
-		'title', configMap.chat_extended_title
+	// Begin extend chat slider
+	if ( do_extend ) {
+	    jqueryMap.$chat.animate(
+		{ height : configMap.chat_extend_height },
+		configMap.chat_extend_time,
+		function () {
+		    jqueryMap.$chat.attr(
+			'title', configMap.chat_extended_title
+		    );
+		    stateMap.is_chat_retracted = false;
+		    if ( callback ) { callback( jqueryMap.$chat ); }
+		}
 	    );
-	      stateMap.is_chat_retracted = false;
-	    if ( callback ) { callback( jqueryMap.$chat ); }
-	  }
+	    return true;
+	}
+	// End extend chat slider
+      
+	// Begin retract chat slider
+	jqueryMap.$chat.animate(
+	    { height : configMap.chat_retract_height },
+	    configMap.chat_retract_time,
+	    function () {
+		jqueryMap.$chat.attr(
+		    'title', configMap.chat_retracted_title
+		);
+		stateMap.is_chat_retracted = true;
+		if ( callback ) { callback( jqueryMap.$chat ); }
+	    }
 	);
 	return true;
-      }
-      // End extend chat slider
-      
-      // Begin retract chat slider
-      jqueryMap.$chat.animate(
-	{ height : configMap.chat_retract_height },
-	configMap.chat_retract_time,
-	function () {
-	    jqueryMap.$chat.attr(
-		'title', configMap.chat_retracted_title
-	    );
-	    stateMap.is_chat_retracted = true;
-	  if ( callback ) { callback( jqueryMap.$chat ); }
-	}
-      );
-      return true;
-      // End retract chat slider
+	// End retract chat slider
     };
     // End DOM method /toggleChat/
     
@@ -148,47 +148,47 @@ spa.shell = (function () {
     //     * Returns true on success, and false on failure.
     //
     changeAnchorPart = function ( arg_map ) {
-      var
+	var
 	anchor_map_revise = copyAnchorMap(),
 	bool_return = true,
 	key_name, key_name_dep;
-
-      // Begin merge changes into anchor map
-      KEYVAL:
-      for ( key_name in arg_map ){
-	if ( arg_map.hasOwnProperty( key_name ) ) {
-	  
-	  // skip dependent keys during iteration
-	  if ( key_name.indexOf( '_' ) === 0 ) { continue KEYVAL; }
+	
+	// Begin merge changes into anchor map
+	KEYVAL:
+	for ( key_name in arg_map ){
+	    if ( arg_map.hasOwnProperty( key_name ) ) {
+		
+		// skip dependent keys during iteration
+		if ( key_name.indexOf( '_' ) === 0 ) { continue KEYVAL; }
 	    
-	  // update independent key value
-	  anchor_map_revise[key_name] = arg_map[key_name];
+		// update independent key value
+		anchor_map_revise[key_name] = arg_map[key_name];
 
-	  // update matching dependent key
-	  key_name_dep = '_' + key_name;
-	  if ( arg_map[key_name_dep] ) {
-	    anchor_map_revise[key_name_dep] = arg_map[key_name_dep];
-	  }
-	  else {
-	    delete anchor_map_revise[key_name_dep];
-	    delete anchor_map_revise['_s' + key_name_dep];
-	  }
+		// update matching dependent key
+		key_name_dep = '_' + key_name;
+		if ( arg_map[key_name_dep] ) {
+		    anchor_map_revise[key_name_dep] = arg_map[key_name_dep];
+		}
+		else {
+		    delete anchor_map_revise[key_name_dep];
+		    delete anchor_map_revise['_s' + key_name_dep];
+		}
+	    }
 	}
-      }
-      // End merge changes into anchor map
+	// End merge changes into anchor map
 
-      // Begin attempt to update URI; revert if not successful
-      try {
-	$.uriAnchor.setAnchor( anchor_map_revise );
-      }
-      catch ( error ) {
-	// replace URI with existing state
-	$.uriAnchor.setAnchor( stateMap.anchor_map,null,true );
-	bool_return = false;
-      }
-      // End attempt to update URI...
+	// Begin attempt to update URI; revert if not successful
+	try {
+	    $.uriAnchor.setAnchor( anchor_map_revise );
+	}
+	catch ( error ) {
+	    // replace URI with existing state
+	    $.uriAnchor.setAnchor( stateMap.anchor_map,null,true );
+	    bool_return = false;
+	}
+	// End attempt to update URI...
 
-      return bool_return;
+	return bool_return;
     };
     // End DOM method /changeAnchorPart/
     //------------------------- END DOM METHODS --------------------------
@@ -251,7 +251,7 @@ spa.shell = (function () {
     // Begin Event handler /onClickChat/
     onClickChat = function ( event ) {
 	changeAnchorPart({
-	  chat : ( stateMap.is_chat_retrated ? 'open' : 'closed' )
+	  chat : ( stateMap.is_chat_retracted ? 'open' : 'closed' )
 	});
 	return false;
     };
@@ -276,6 +276,10 @@ spa.shell = (function () {
 	$.uriAnchor.configModule({
 	    schema_map : configMap.anchor_schema_map
 	});
+
+	// configure and initialize feature modules
+	spa.chat.configModule( {} );
+	spa.chat.initModule( jqueryMap.$chat );
 
 	// Handle URI anchor change events.
 	// This is done /after/ all feature modules are configured
