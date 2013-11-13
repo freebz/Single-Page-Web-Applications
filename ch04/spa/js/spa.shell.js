@@ -35,13 +35,18 @@ spa.shell = (function () {
 	chat_extend_height   : 450,
 	chat_retract_height  : 15,
 	chat_extended_title  : 'Click to retract',
-	chat_retracted_title : 'Click to extend'
+	chat_retracted_title : 'Click to extend',
+	  resize_interval : 200
       },
-      stateMap = { anchor_map : {} },
+      stateMap = { 
+	  $container  : undefined,
+	  anchor_map  : {},
+	  resize_idto : undefined
+      },
       jqueryMap = {},
     
       copyAnchorMap,    setJqueryMap,
-      changeAnchorPart, onHashchange,
+      changeAnchorPart, onHashchange, onResize,
       setChatAnchor,    initModule;
     //-------------------- END MODULE SCOPE VARIABLES --------------------
     
@@ -260,6 +265,20 @@ spa.shell = (function () {
 	return false;
     };
     // End Event handler /onClickChat/
+
+    // Begin Event handler /onResize/
+    onResize = function (){
+	if ( stateMap.resize_idto ){ return true; }
+
+	spa.chat.handleResize();
+	stateMap.resize_idto = setTimeout(
+	    function (){ stateMap.resize_idto = undefined; },
+	    configMap.resize_interval
+	);
+
+	return true;
+    };
+    // End Event handler /onResize/
     //------------------------ END EVENT HANDLERS ------------------------
 
     //------------------------ BEGIN CALLBACKS ---------------------------
@@ -298,6 +317,7 @@ spa.shell = (function () {
 	// is considered on-load
 	//
 	$(window)
+	  .bind( 'resize', onResize )
 	  .bind( 'hashchange', onHashchange )
 	  .trigger( 'hashchange' );
 
