@@ -173,15 +173,13 @@ spa.model = (function () {
     };
 
     logout = function () {
-      var is_removed, user = stateMap.user;
-      // when we add chat, we should leave the chatroom here
+	var user = stateMap.user;
 
 	chat._leave();
-      is_removed    = removePerson( user );
-      stateMap.user = stateMap.anon_user;
+	stateMap.user = stateMap.anon_user;
+	clearPeopleDb();
 
-      $.gevent.publish( 'spa-logout', [ user ] );
-      return is_removed;
+	$.gevent.publish( 'spa-logout', [ user ] );
     };
 
     return {
@@ -204,6 +202,7 @@ spa.model = (function () {
 	_update_list, _leave_chat, 
 
 	get_chatee, join_chat, send_msg, set_chatee,
+	update_avatar,
 
 	chatee = null;
 
@@ -233,11 +232,12 @@ spa.model = (function () {
 		    id      : person_map._id,
 		    name    : person_map.name
 		};
+		person = makePerson( make_person_map );
 
 		if ( chatee && chatee.id === make_person_map.id ) {
 		    is_chatee_online = true;
+		    chatee = person;
 		}
-		makePerson( make_person_map );
 	    }
 
 	    stateMap.people_db.sort( 'name' );
@@ -326,12 +326,20 @@ spa.model = (function () {
 	    return true;
 	};
 
+	update_avatar = function ( avatar_update_map ) {
+	    var sio = isFakeData ? spa.fake.mockSio : spa.data.getSio();
+	    if ( sio ) {
+		sio.emit( 'updateavatar', avatar_update_map );
+	    }
+	};
+
 	return {
-	    _leave     : _leave_chat,
-	    get_cahtee : get_chatee,
-	    join       : join_chat,
-	    send_msg   : send_msg,
-	    set_chatee : set_chatee
+	    _leave        : _leave_chat,
+	    get_cahtee    : get_chatee,
+	    join          : join_chat,
+	    send_msg      : send_msg,
+	    set_chatee    : set_chatee,
+	    update_avatar : update_avatar
 	};
     }());
 
