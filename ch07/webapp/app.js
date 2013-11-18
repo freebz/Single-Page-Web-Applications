@@ -1,5 +1,5 @@
 /*
- * app.js - Simple connect server
+ * app.js - Express server with advanced routing
 */
 
 /*jslint         node    : true, continue : true,
@@ -14,6 +14,7 @@
 var
 http     = require( 'http'    ),
 express  = require( 'express' ),
+routes   = require( './routes' ),
 
 app      = express(),
 server   = http.createServer( app );
@@ -23,6 +24,7 @@ server   = http.createServer( app );
 app.configure( function () {
   app.use( express.bodyParser() );
   app.use( express.methodOverride() );
+  app.use( express.basicAuth( 'user', 'spa' ) );
   app.use( express.static( __dirname + '/public' ) );
   app.use( app.router );
 });
@@ -35,9 +37,11 @@ app.configure( 'development', function () {
   }) );
 });
 
-app.get( '/', function ( request, response ) {
-  response.redirect( '/spa.html' );
+app.configure( 'production', function () {
+  app.use( express.errorHandler() );
 });
+
+routes.configRoutes( app, server );
 // -------------- END SERVER CONFIGURATION ------------------
 
 // ----------------- BEGIN START SERVER ---------------------
